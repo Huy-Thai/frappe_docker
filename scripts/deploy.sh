@@ -31,7 +31,7 @@ done
 main()
 {
     if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]; then
-        echo "Some or all of the parameters are empty";
+        echo "-- Some or all of the parameters are empty";
         help_func
     fi
 
@@ -43,7 +43,7 @@ main()
             # launch_container
         fi
     else
-        echo "-Directory does not exist"
+        echo "-- Directory does not exist"
         return 1
     fi
 }
@@ -52,7 +52,7 @@ is_healthy()
 { 
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
-        echo "-Healthy Ok for Rebuild!"
+        echo "-- Healthy Ok for Rebuild!"
     else
         return 1
     fi
@@ -65,9 +65,9 @@ pre_process()
     wait
     if is_healthy; then 
         docker rmi $image_id
-        echo "-Step 1 Ok"
+        echo "-- Step 1 Ok"
     else
-        echo "-Step 1 Error, stop docker image failed!"
+        echo "-- Step 1 Error, stop docker image failed!"
         return 1
     fi
 }
