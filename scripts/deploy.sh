@@ -91,12 +91,8 @@ rebuild_image()
 {
     export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
     cd ..
-    docker build \
-        --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe \
-        --build-arg=FRAPPE_BRANCH=$frappe_ver \
-        --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 \
-        --tag=$image_name \
-        --file=images/custom/Containerfile .
+    pwd
+    docker build --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe --build-arg=FRAPPE_BRANCH=$frappe_ver --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 --tag=$image_name --file=images/custom/Containerfile .
 }
 
 launch_container()
