@@ -75,15 +75,6 @@ launch_container()
 {
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
-    wait
-    is_container_healthy
-    wait
-    if [ "$container_status" -eq 0 ]
-    then
-        echo "Deploy Successful"
-    else
-        echo "Deploy Failed"
-    fi
 }
 
 main()
