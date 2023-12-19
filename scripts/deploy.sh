@@ -50,7 +50,8 @@ main()
     fi
 }
 
-is_healthy() { 
+is_healthy()
+{ 
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
         echo "-Healthy Ok for Rebuild!"
@@ -59,7 +60,8 @@ is_healthy() {
     fi
 }
 
-pre_process() {
+pre_process()
+{
     cd $compose_file_path
     docker compose down
     wait
@@ -76,11 +78,11 @@ rebuild_image()
 {
     declare -A apps_json0=(
         [url]="https://github.com/pandion-vn/AC_erpnext"
-        [branch]=$erpnext_ver
+        [branch]=${erpnext_ver}
     )
     declare -A apps_json1=(
         [url]="https://github.com/pandion-vn/AC_hrms"
-        [branch]=$hrms_ver
+        [branch]=${hrms_ver}
     )
 
     declare -n apps_json
