@@ -1,12 +1,8 @@
 #!/bin/bash
-
-#1/stop docker container đang chạy và xóa image cũ
-#2/export version app mới theo input
-#3/build lại image mới
-#4/cd vào thư mục chưa file docker compose và deploy
-
 container_name="acerp-docker-frontend-1"
 image_name="acerp/frappe-cust"
+container_status=-1
+image_status=-1
 
 help_func()
 {
@@ -29,20 +25,20 @@ is_container_healthy()
 {
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
-    if [ "${health_status}" -ne "running" ]; then
-        echo "Stopped"
+    if [ "${health_status}" != "running" ]; then
+        container_status=1
     else
-        echo "Running"
+        container_status=0
     fi
 }
 
 is_images_healthy()
 { 
     health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
-    if [ "${health_status}" -ne "" ]; then
-        echo "Ok"
+    if [ "${health_status}" != "" ]; then
+        image_status=1
     else
-        echo "Failed"
+        image_status=0
     fi
 }
 
@@ -51,14 +47,13 @@ pre_process()
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose down
     wait
-
-    result=$(is_container_healthy)
-    if [$result -eq "Stopped"]; then 
+    is_container_healthy
+    if [ "$container_status" == 1 ]
+    then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
-        echo "Ok"
     else
-        echo "Failed"
+        exit 1
     fi
 }
 
@@ -74,33 +69,32 @@ launch_container()
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
     wait
-
-    result=$(is_container_healthy)
-    if [$result -eq "Running"]; then 
-        echo "Ok"
+    is_container_healthy
+    if [ "$container_status" == 0 ]
+    then
+        echo "Deploy Successful"
     else
-        echo "Failed"
+        echo "Deploy Failed"
     fi
 }
 
 main()
 {
-    if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]; then
+    if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]
+    then
         echo "Some or all of the parameters are empty"
         help_func
     fi
-
-    result=$(pre_process)
-    if [$result -eq "Ok"]; then
+    
+    pre_process
+    wait
+    rebuild_image
+    wait
+    is_images_healthy
+    if [ "$image_status" == 1 ]
+    then
         wait
-        rebuild_image
-        wait
-
-        result=$(is_images_healthy)
-        if [$result -eq "Ok"]; then
-            wait
-            launch_container
-        fi
+        launch_container
     fi
 }
 
