@@ -29,7 +29,7 @@ is_container_healthy()
 {
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
-    if [ "${health_status}" != "running" ]; then
+    if [ "${health_status}" -ne "running" ]; then
         echo "Stopped"
     else
         echo "Running"
@@ -39,7 +39,7 @@ is_container_healthy()
 is_images_healthy()
 { 
     health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
-    if [ "${health_status}" != "" ]; then
+    if [ "${health_status}" -ne "" ]; then
         echo "Ok"
     else
         echo "Failed"
@@ -53,7 +53,7 @@ pre_process()
     wait
 
     result=$(is_container_healthy)
-    if [$result == "Stopped"]; then 
+    if [$result -eq "Stopped"]; then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
         echo "Ok"
@@ -76,7 +76,7 @@ launch_container()
     wait
 
     result=$(is_container_healthy)
-    if [$result == "Running"]; then 
+    if [$result -eq "Running"]; then 
         echo "Ok"
     else
         echo "Failed"
@@ -91,13 +91,13 @@ main()
     fi
 
     result=$(pre_process)
-    if [$result == "Ok"]; then
+    if [$result -eq "Ok"]; then
         wait
         rebuild_image
         wait
 
         result=$(is_images_healthy)
-        if [$result == "Ok"]; then
+        if [$result -eq "Ok"]; then
             wait
             launch_container
         fi
