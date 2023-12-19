@@ -52,7 +52,8 @@ pre_process()
     docker compose down
     wait
 
-    if $(is_container_healthy) == "Stopped"; then 
+    result=$(is_container_healthy)
+    if $result == "Stopped"; then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
         echo "Ok"
@@ -73,7 +74,9 @@ launch_container()
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
     wait
-    if $(is_container_healthy) == "Running"; then 
+
+    result=$(is_container_healthy)
+    if $result == "Running"; then 
         echo "Ok"
     else
         echo "Failed"
@@ -87,11 +90,14 @@ main()
         help_func
     fi
 
-    if $(pre_process) == "Ok"; then
+    result=$(pre_process)
+    if $result == "Ok"; then
         wait
         rebuild_image
         wait
-        if $(is_images_healthy) == "Ok"; then
+
+        result=$(is_images_healthy)
+        if $result == "Ok"; then
             wait
             launch_container
         fi
