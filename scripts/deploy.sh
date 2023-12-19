@@ -30,7 +30,8 @@ do
     esac
 done
 
-main() {
+main()
+{
     if [ -z "$frappe_ver" ] || [ -z "$erpnext_ver" ] || [ -z "$hrms_ver" ]
     then
         echo "Some or all of the parameters are empty";
@@ -46,7 +47,7 @@ main() {
             # launch_container
     else
         echo "Directory does not exist"
-        exit 1
+        return 1
     fi
 }
 
