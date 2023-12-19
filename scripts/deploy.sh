@@ -75,6 +75,7 @@ launch_container()
 {
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
+    echo "Deploy Successful"
 }
 
 main()
