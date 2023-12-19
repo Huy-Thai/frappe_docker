@@ -14,17 +14,17 @@ image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_na
 help_func()
 {
    echo ""
-   echo "Usage: $0 -f frappe_ver -a apps_json"
+   echo "Usage: $0 -f frappe_ver -o apps_json"
    echo "\t-f Description of frappe app version"
-   echo "\t-a Description of erpnext app version & hrms app version"
+   echo "\t-o Description of erpnext app version & hrms app version"
    exit 1
 }
 
-while getopts f:e:h: flag
+while getopts f:o: flag
 do
     case "${flag}" in
         f) frappe_ver=${OPTARG};;
-        a) apps_json=${OPTARG};;
+        o) apps_json=${OPTARG};;
     esac
 done
 
