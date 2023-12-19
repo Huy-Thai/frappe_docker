@@ -32,19 +32,18 @@ done
 
 main()
 {
-    if [ -z "$frappe_ver" ] || [ -z "$erpnext_ver" ] || [ -z "$hrms_ver" ]
-    then
+    if [ -z "$frappe_ver" ] || [ -z "$erpnext_ver" ] || [ -z "$hrms_ver" ]; then
         echo "Some or all of the parameters are empty";
         help_func
     fi
 
-    if [ -d $folder_path ]
-    then
+    if [ -d $folder_path ]; then
         if pre_process; then
             wait
             rebuild_image
             # wait
             # launch_container
+        fi
     else
         echo "Directory does not exist"
         return 1
