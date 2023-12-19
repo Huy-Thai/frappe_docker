@@ -25,7 +25,8 @@ is_container_healthy()
 {
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
-    if [ "${health_status}" != "running" ]; then
+    if [ "${health_status}" != "running" ]
+    then
         container_status=1
     else
         container_status=0
@@ -35,7 +36,8 @@ is_container_healthy()
 is_images_healthy()
 { 
     health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
-    if [ "${health_status}" != "" ]; then
+    if [ "${health_status}" != "" ]
+    then
         image_status=1
     else
         image_status=0
