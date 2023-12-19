@@ -31,7 +31,7 @@ is_container_healthy()
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
-        echo "-- Container Healthy: ${health_status} --"
+        echo "-- Container Healthy Ok For Rebuild! --"
     else
         return 1
     fi
@@ -41,7 +41,7 @@ is_images_healthy()
 { 
     health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
     if [ "${health_status}" != "" ]; then
-        echo "-- Images Healthy: Build new images completed! --"
+        echo "-- Build new image completed! --"
     else
         return 1
     fi
@@ -66,6 +66,7 @@ pre_process()
 rebuild_image()
 {
     export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
+    pwd
     cd "/home/deploy/workspace/acerp-prod/frappe_docker"
     docker build --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe --build-arg=FRAPPE_BRANCH=$frappe_ver --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 --tag=$image_name --file=images/custom/Containerfile .
 }
