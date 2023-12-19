@@ -72,17 +72,19 @@ pre_process() {
     fi
 }
 
-rebuild_image() {
-    export APPS_JSON=[
-        {
-            "url": "https://github.com/pandion-vn/AC_erpnext",
-            "branch": $erpnext_ver
-        },
-        {
-            "url": "https://github.com/pandion-vn/AC_hrms",
-            "branch": $hrms_ver
-        }
-    ]
+rebuild_image()
+{
+    declare -A apps_json0=(
+        [url]="https://github.com/pandion-vn/AC_erpnext"
+        [branch]=$erpnext_ver
+    )
+    declare -A apps_json1=(
+        [url]="https://github.com/pandion-vn/AC_hrms"
+        [branch]=$hrms_ver
+    )
+
+    declare -n apps_json
+    export APPS_JSON=$apps_json
     export APPS_JSON_BASE64=$(echo ${APPS_JSON} | base64 -w 0)
     env
     # docker build \
