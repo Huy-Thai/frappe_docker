@@ -52,7 +52,7 @@ pre_process()
     docker compose down
     wait
 
-    if is_container_healthy; then 
+    if ! is_container_healthy; then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
         echo "-- Ok --"
@@ -74,7 +74,7 @@ launch_container()
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
     wait
-    if ! is_container_healthy; then 
+    if is_container_healthy; then 
         echo "-- Deploy Successful --"
     else
         echo "-- Deploy failed! --"
