@@ -25,7 +25,7 @@ is_container_healthy()
 {
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
-    if "${health_status}" != "running"
+    if [ "${health_status}" != "running" ];
     then
         container_status=1
     else
@@ -36,7 +36,7 @@ is_container_healthy()
 is_images_healthy()
 { 
     health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
-    if "${health_status}" != ""
+    if [ "${health_status}" != "" ];
     then
         image_status=1
     else
@@ -50,7 +50,7 @@ pre_process()
     docker compose down
     wait
     is_container_healthy
-    if "$container_status" == 1
+    if [ "$container_status" == 1 ];
     then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
@@ -72,7 +72,7 @@ launch_container()
     docker compose up -d
     wait
     is_container_healthy
-    if "$container_status" == 0
+    if [ "$container_status" == 0 ];
     then
         echo "Deploy Successful"
     else
@@ -82,7 +82,7 @@ launch_container()
 
 main()
 {
-    if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]
+    if [ -z "$frappe_ver" ] || [ -z "$apps_json" ];
     then
         echo "Some or all of the parameters are empty"
         help_func
@@ -93,7 +93,7 @@ main()
     rebuild_image
     wait
     is_images_healthy
-    if "$image_status" == 1
+    if [ "$image_status" == 1 ];
     then
         wait
         launch_container
