@@ -18,6 +18,14 @@ help_func()
    exit 1
 }
 
+while getopts f:o: flag
+do
+    case "${flag}" in
+        f) frappe_ver=${OPTARG};;
+        o) apps_json=${OPTARG};;
+    esac
+done
+
 is_container_healthy()
 {
     container_id="$(docker ps -aqf "name=${container_name}")"
@@ -39,13 +47,41 @@ is_images_healthy()
     fi
 }
 
-while getopts f:o: flag
-do
-    case "${flag}" in
-        f) frappe_ver=${OPTARG};;
-        o) apps_json=${OPTARG};;
-    esac
-done
+pre_process()
+{
+    cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
+    docker compose down
+    wait
+
+    if is_container_healthy; then 
+        image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
+        docker rmi $image_id
+        echo "-- Ok --"
+    else
+        echo "-- Stop docker image failed! --"
+        return 1
+    fi
+}
+
+rebuild_image()
+{
+    export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
+    cd "/home/deploy/workspace/acerp-prod/frappe_docker"
+    docker build --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe --build-arg=FRAPPE_BRANCH=$frappe_ver --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 --tag=$image_name --file=images/custom/Containerfile .
+}
+
+launch_container()
+{
+    cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
+    docker compose up -d
+    wait
+    if is_container_healthy; then 
+        echo "-- Deploy Successful --"
+    else
+        echo "-- Deploy failed! --"
+        return 1
+    fi
+}
 
 main()
 {
@@ -67,43 +103,6 @@ main()
         fi
     else
         echo "-- Directory does not exist --"
-        return 1
-    fi
-}
-
-pre_process()
-{
-    cd $compose_file_path
-    docker compose down
-    wait
-
-    if is_container_healthy; then 
-        image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
-        docker rmi $image_id
-        echo "-- Ok --"
-    else
-        echo "-- Stop docker image failed! --"
-        return 1
-    fi
-}
-
-rebuild_image()
-{
-    export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
-    cd ..
-    pwd
-    docker build --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe --build-arg=FRAPPE_BRANCH=$frappe_ver --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 --tag=$image_name --file=images/custom/Containerfile .
-}
-
-launch_container()
-{
-    cd $compose_file_path
-    docker compose up -d
-    wait
-    if is_container_healthy; then 
-        echo "-- Deploy Successful --"
-    else
-        echo "-- Deploy failed! --"
         return 1
     fi
 }
