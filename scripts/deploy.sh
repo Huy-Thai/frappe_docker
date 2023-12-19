@@ -30,9 +30,9 @@ is_container_healthy()
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
-        return 1
+        echo "Stopped"
     else
-        return 0
+        echo "Running"
     fi
 }
 
@@ -40,9 +40,9 @@ is_images_healthy()
 { 
     health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
     if [ "${health_status}" != "" ]; then
-        echo "-- Build new image completed! --"
+        echo "Ok"
     else
-        return 1
+        echo "Failed"
     fi
 }
 
@@ -52,13 +52,12 @@ pre_process()
     docker compose down
     wait
 
-    if ! is_container_healthy; then 
+    if $(is_container_healthy) == "Stopped"; then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
-        echo "-- Ok --"
+        echo "Ok"
     else
-        echo "-- Stop docker image failed! --"
-        return 1
+        echo "Failed"
     fi
 }
 
@@ -74,26 +73,25 @@ launch_container()
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
     wait
-    if is_container_healthy; then 
-        echo "-- Deploy Successful --"
+    if $(is_container_healthy) == "Running"; then 
+        echo "Ok"
     else
-        echo "-- Deploy failed! --"
-        return 1
+        echo "Failed"
     fi
 }
 
 main()
 {
     if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]; then
-        echo "-- Some or all of the parameters are empty --"
+        echo "Some or all of the parameters are empty"
         help_func
     fi
 
-    if pre_process; then
+    if $(pre_process) == "Ok"; then
         wait
         rebuild_image
         wait
-        if is_images_healthy; then
+        if $(is_images_healthy) == "Ok"; then
             wait
             launch_container
         fi
