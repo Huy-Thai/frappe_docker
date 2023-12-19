@@ -14,9 +14,9 @@ image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_na
 help_func()
 {
    echo ""
-   echo "Usage: $0 -f frappe_ver -apps apps_json"
+   echo "Usage: $0 -f frappe_ver -a apps_json"
    echo "\t-f Description of frappe app version"
-   echo "\t-apps Description of erpnext app version & hrms app version"
+   echo "\t-a Description of erpnext app version & hrms app version"
    exit 1
 }
 
@@ -24,13 +24,13 @@ while getopts f:e:h: flag
 do
     case "${flag}" in
         f) frappe_ver=${OPTARG};;
-        apps) apps_json=${OPTARG};;
+        a) apps_json=${OPTARG};;
     esac
 done
 
 main()
 {
-    if [ -z "$frappe_ver" ] || [ -z "$erpnext_ver" ] || [ -z "$hrms_ver" ]; then
+    if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]; then
         echo "Some or all of the parameters are empty";
         help_func
     fi
@@ -74,7 +74,7 @@ pre_process()
 
 rebuild_image()
 {
-    export APPS_JSON_BASE64=$(echo ${APPS_JSON} | base64 -w 0)
+    export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
     env
     # docker build \
     #     --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe \
