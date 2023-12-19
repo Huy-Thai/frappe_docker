@@ -27,8 +27,10 @@ is_container_healthy()
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ];
     then
+        echo "Stopped"
         container_status=1
     else
+        echo "Running"
         container_status=0
     fi
 }
