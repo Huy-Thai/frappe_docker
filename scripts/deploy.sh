@@ -45,7 +45,7 @@ main()
             # launch_container
         fi
     else
-        echo "Directory does not exist"
+        echo "-Directory does not exist"
         return 1
     fi
 }
@@ -53,7 +53,7 @@ main()
 is_healthy() { 
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
-        echo "Ok"
+        echo "-Healthy Ok for Rebuild!"
     else
         return 1
     fi
@@ -65,24 +65,24 @@ pre_process() {
     wait
     if is_healthy; then 
         docker rmi $image_id
-        echo "Ok"
+        echo "-Step 1 Ok"
     else
-        echo "Step 1 Error, stop docker image failed!"
+        echo "-Step 1 Error, stop docker image failed!"
         return 1
     fi
 }
 
 rebuild_image() {
-    export APPS_JSON='[
+    export APPS_JSON=[
         {
             "url": "https://github.com/pandion-vn/AC_erpnext",
-            "branch": "${erpnext_ver}"
+            "branch": $erpnext_ver
         },
         {
             "url": "https://github.com/pandion-vn/AC_hrms",
-            "branch": "${hrms_ver}"
+            "branch": $hrms_ver
         }
-    ]'
+    ]
     export APPS_JSON_BASE64=$(echo ${APPS_JSON} | base64 -w 0)
     env
     # docker build \
