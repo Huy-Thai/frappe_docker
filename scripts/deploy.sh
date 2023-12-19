@@ -14,10 +14,9 @@ image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_na
 help_func()
 {
    echo ""
-   echo "Usage: $0 -f frappe_ver -e erpnext_ver -h hrms_ver"
+   echo "Usage: $0 -f frappe_ver -apps apps_json"
    echo "\t-f Description of frappe app version"
-   echo "\t-e Description of erpnext app version"
-   echo "\t-h Description of hrms app version"
+   echo "\t-apps Description of erpnext app version & hrms app version"
    exit 1
 }
 
@@ -25,8 +24,7 @@ while getopts f:e:h: flag
 do
     case "${flag}" in
         f) frappe_ver=${OPTARG};;
-        e) erpnext_ver=${OPTARG};;
-        h) hrms_ver=${OPTARG};;
+        apps) apps_json=${OPTARG};;
     esac
 done
 
@@ -76,17 +74,6 @@ pre_process()
 
 rebuild_image()
 {
-    declare -A apps_json0=(
-        [url]="https://github.com/pandion-vn/AC_erpnext"
-        [branch]=${erpnext_ver}
-    )
-    declare -A apps_json1=(
-        [url]="https://github.com/pandion-vn/AC_hrms"
-        [branch]=${hrms_ver}
-    )
-
-    declare -n apps_json
-    export APPS_JSON=$apps_json
     export APPS_JSON_BASE64=$(echo ${APPS_JSON} | base64 -w 0)
     env
     # docker build \
