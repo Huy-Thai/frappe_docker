@@ -30,9 +30,9 @@ is_container_healthy()
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
-        echo "-- Container Healthy Ok! --"
-    else
         return 1
+    else
+        return 0
     fi
 }
 
@@ -74,7 +74,7 @@ launch_container()
     cd "/home/deploy/workspace/acerp-prod/frappe_docker/build-docker"
     docker compose up -d
     wait
-    if is_container_healthy; then 
+    if ! is_container_healthy; then 
         echo "-- Deploy Successful --"
     else
         echo "-- Deploy failed! --"
