@@ -51,7 +51,7 @@ pre_process()
     wait
     is_container_healthy
     wait
-    if [ "$container_status" == 1 ];
+    if [ "$container_status" -eq 1 ];
     then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
@@ -74,7 +74,7 @@ launch_container()
     wait
     is_container_healthy
     wait
-    if [ "$container_status" == 0 ];
+    if [ "$container_status" -eq 0 ];
     then
         echo "Deploy Successful"
     else
@@ -96,7 +96,7 @@ main()
     wait
     is_images_healthy
     wait
-    if [ "$image_status" == 1 ];
+    if [ "$image_status" -eq 1 ];
     then
         wait
         launch_container
