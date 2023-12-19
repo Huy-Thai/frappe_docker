@@ -50,6 +50,7 @@ pre_process()
     docker compose down
     wait
     is_container_healthy
+    wait
     if [ "$container_status" == 1 ];
     then 
         image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
@@ -72,6 +73,7 @@ launch_container()
     docker compose up -d
     wait
     is_container_healthy
+    wait
     if [ "$container_status" == 0 ];
     then
         echo "Deploy Successful"
@@ -93,6 +95,7 @@ main()
     rebuild_image
     wait
     is_images_healthy
+    wait
     if [ "$image_status" == 1 ];
     then
         wait
