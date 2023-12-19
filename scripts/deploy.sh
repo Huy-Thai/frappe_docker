@@ -7,9 +7,7 @@
 
 folder_path="../build-docker"
 container_name="acerp-docker-frontend-1"
-container_id="$(docker ps -aqf "name=${container_name}")"
 image_name="acerp/frappe-cust"
-image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
 
 help_func()
 {
@@ -18,6 +16,27 @@ help_func()
    echo "\t-f Description of frappe app version"
    echo "\t-o Description of erpnext app version & hrms app version"
    exit 1
+}
+
+is_container_healthy()
+{
+    container_id="$(docker ps -aqf "name=${container_name}")"
+    health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
+    if [ "${health_status}" != "running" ]; then
+        echo "-- Container Healthy: ${health_status} --"
+    else
+        return 1
+    fi
+}
+
+is_images_healthy()
+{ 
+    health_status="$(docker images -q ${image_name}:latest 2> /dev/null)"
+    if [ "${health_status}" != "" ]; then
+        echo "-- Images Healthy: Build new images completed! --"
+    else
+        return 1
+    fi
 }
 
 while getopts f:o: flag
@@ -31,7 +50,7 @@ done
 main()
 {
     if [ -z "$frappe_ver" ] || [ -z "$apps_json" ]; then
-        echo "-- Some or all of the parameters are empty";
+        echo "-- Some or all of the parameters are empty --"
         help_func
     fi
 
@@ -39,21 +58,15 @@ main()
         if pre_process; then
             wait
             rebuild_image
-            # wait
-            # launch_container
+
+            wait
+            if is_images_healthy; then
+                wait
+                launch_container
+            fi
         fi
     else
-        echo "-- Directory does not exist"
-        return 1
-    fi
-}
-
-is_healthy()
-{ 
-    health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
-    if [ "${health_status}" != "running" ]; then
-        echo "-- Healthy Ok for Rebuild!"
-    else
+        echo "-- Directory does not exist --"
         return 1
     fi
 }
@@ -63,11 +76,13 @@ pre_process()
     cd $compose_file_path
     docker compose down
     wait
-    if is_healthy; then 
+
+    if is_container_healthy; then 
+        image_id="$(docker images --format="{{.Repository}} {{.ID}}" | grep "^${image_name} " | cut -d' ' -f2)"
         docker rmi $image_id
-        echo "-- Step 1 Ok"
+        echo "-- Ok --"
     else
-        echo "-- Step 1 Error, stop docker image failed!"
+        echo "-- Stop docker image failed! --"
         return 1
     fi
 }
@@ -75,17 +90,24 @@ pre_process()
 rebuild_image()
 {
     export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
-    env
-    # docker build \
-    #     --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe \
-    #     --build-arg=FRAPPE_BRANCH=$frappe_ver \
-    #     --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 \
-    #     --tag=$image_name \
-    #     --file=../images/custom/Containerfile .
+    docker build \
+        --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe \
+        --build-arg=FRAPPE_BRANCH=$frappe_ver \
+        --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 \
+        --tag=$image_name \
+        --file=../images/custom/Containerfile .
 }
 
-# launch_container() {
-#     echo "runnn 2"
-# }
+launch_container()
+{
+    docker compose up -d
+    wait
+    if is_container_healthy; then 
+        echo "-- Deploy Successful --"
+    else
+        echo "-- Deploy failed! --"
+        return 1
+    fi
+}
 
 main "$@"
