@@ -5,7 +5,6 @@
 #3/build lại image mới
 #4/cd vào thư mục chưa file docker compose và deploy
 
-folder_path="../build-docker"
 container_name="acerp-docker-frontend-1"
 image_name="acerp/frappe-cust"
 
@@ -31,7 +30,7 @@ is_container_healthy()
     container_id="$(docker ps -aqf "name=${container_name}")"
     health_status="$(docker inspect --format='{{json .State.Status}}' "${container_id}")"
     if [ "${health_status}" != "running" ]; then
-        echo "-- Container Healthy Ok For Rebuild! --"
+        echo "-- Container Healthy Ok! --"
     else
         return 1
     fi
@@ -66,7 +65,6 @@ pre_process()
 rebuild_image()
 {
     export APPS_JSON_BASE64=$(echo $apps_json | base64 -w 0)
-    pwd
     cd "/home/deploy/workspace/acerp-prod/frappe_docker"
     docker build --build-arg=FRAPPE_PATH=https://github.com/pandion-vn/AC_frappe --build-arg=FRAPPE_BRANCH=$frappe_ver --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 --tag=$image_name --file=images/custom/Containerfile .
 }
@@ -91,20 +89,14 @@ main()
         help_func
     fi
 
-    if [ -d $folder_path ]; then
-        if pre_process; then
+    if pre_process; then
+        wait
+        rebuild_image
+        wait
+        if is_images_healthy; then
             wait
-            rebuild_image
-
-            wait
-            if is_images_healthy; then
-                wait
-                launch_container
-            fi
+            launch_container
         fi
-    else
-        echo "-- Directory does not exist --"
-        return 1
     fi
 }
 
